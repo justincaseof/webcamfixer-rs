@@ -1,10 +1,10 @@
-use std::mem;
+use std::{mem, thread, time};
 
 use windows::{
     core::{ComInterface, Interface, GUID, PCWSTR},
     Win32::{
         Media::{
-            DirectShow::{IAMCameraControl, IBaseFilter, ICreateDevEnum},
+            DirectShow::{IAMCameraControl, IBaseFilter, ICreateDevEnum, CameraControl_Focus, CameraControl_Zoom, CameraControl_Roll, CameraControl_Flags_Manual, CameraControlFlags},
             MediaFoundation::{CLSID_SystemDeviceEnum, CLSID_VideoInputDeviceCategory},
         },
         System::{
@@ -105,30 +105,67 @@ fn windows_1() {
                         println!("   - camctl: {:?}", camctl);
                         
                         // ### READ PROPERTIES (currently not working: (Err(Error { code: HRESULT(0x80070057), message: "The parameter is incorrect." })))
-                        let val: *mut i32 = mem::zeroed();
-                        let flags: *mut i32 = mem::zeroed();
-                        let mut the_prop = IAMCameraControl_PROP_ROLL;
-                        
-                        let _val: i32 = 0;
-                        let _flags: i32;
-                        let __val = _val;
+                        let mut val: i32 = 0;
+                        let _val = &mut val as *mut i32;
 
-                        for m in 0..6 {
-                            the_prop = m;
-                            let res = camctl.Get(the_prop, val, flags);
-                            println!("     - camctl.get({}): val={:?}, flags={:?} ({:?})", the_prop, val, flags, res);
-                        }
+                        // let flags: *mut i32 = mem::zeroed();
+                        let prop = CameraControl_Zoom.0;
+                        let mut flags = CameraControlFlags::default();
+                        let _flags = &mut flags.0 as *mut i32;
+                        let res = camctl.Get(prop, _val, _flags);
+                        println!("     - camctl.get({}): val={:?}, flags={:?} ({:?})", prop, val, *_flags, res);
 
                         // ### WRITE PROPERTIES
+                       
                         // ROLL
-                        let res = camctl.Set(IAMCameraControl_PROP_ROLL, 1, 0);  // WORKS!!!!!
-                        println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", the_prop, val, flags, res);
+                        let prop = CameraControl_Roll.0;
+                        let val = 1;
+                        let flags = 0;
+                        let res = camctl.Set(CameraControl_Roll.0, 1, 0);  // WORKS!!!!!
+                        println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", CameraControl_Roll.0, val, flags, res);
+                            thread::sleep(time::Duration::from_millis(250));
+                            // ROLL BACK
+                            let prop = CameraControl_Roll.0;
+                            let val = 1;
+                            let flags = 0;
+                            let res = camctl.Set(CameraControl_Roll.0, 2, 0);  // WORKS!!!!!
+                            println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", CameraControl_Roll.0, val, flags, res);
+                            thread::sleep(time::Duration::from_millis(250));
+                            // ROLL BACK
+                            let prop = CameraControl_Roll.0;
+                            let val = 1;
+                            let flags = 0;
+                            let res = camctl.Set(CameraControl_Roll.0, 3, 0);  // WORKS!!!!!
+                            println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", CameraControl_Roll.0, val, flags, res);
+                            thread::sleep(time::Duration::from_millis(250));
+                            // ROLL BACK
+                            let prop = CameraControl_Roll.0;
+                            let val = 1;
+                            let flags = 0;
+                            let res = camctl.Set(CameraControl_Roll.0, 0, 0);  // WORKS!!!!!
+                            println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", CameraControl_Roll.0, val, flags, res);
+                            thread::sleep(time::Duration::from_millis(500));
+
                         // ZOOM
-                        let res = camctl.Set(IAMCameraControl_PROP_ZOOM, 200, 0);  // 100 .. 400 WORKS!!!!
-                        println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", the_prop, val, flags, res);
+                        let prop = CameraControl_Zoom.0;
+                        let val = 1;
+                        let flags = 0;
+                        let res = camctl.Set(CameraControl_Zoom.0, 120, 0);  // 100 .. 400 WORKS!!!!
+                        println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", CameraControl_Zoom.0, val, flags, res);
+                            thread::sleep(time::Duration::from_millis(250));
+                            // ZOOM BACK
+                            let prop = CameraControl_Roll.0;
+                            let val = 1;
+                            let flags = 0;
+                            let res = camctl.Set(CameraControl_Zoom.0, 100, 0);  // WORKS!!!!!
+                            println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", CameraControl_Zoom.0, val, flags, res);
+                        
                         // FOCUS
-                        let res = camctl.Set(IAMCameraControl_PROP_FOCUS, IAMCameraControl_FLAG_FOCUS_MANUAL, 0);
-                        println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", the_prop, val, flags, res);
+                        let prop = CameraControl_Focus.0;
+                        let val = 1;
+                        let flags = 0;
+                        let res = camctl.Set(CameraControl_Focus.0, CameraControl_Flags_Manual.0, 0);  // will probably work...
+                        println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", CameraControl_Focus.0, val, flags, res);
                     }
                 }
                 1 => {
