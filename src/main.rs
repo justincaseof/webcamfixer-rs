@@ -158,12 +158,14 @@ fn windows_1() {
 
                     // 
 
+                    let mut props: IPropertyBag;
                     let hr = m.BindToStorage(None, None, &P_BAG, &mut result__);
                     println!(
                         " --> IPropertyBag as Storage: {:?}  --  result__: {:?}",
                         hr, result__
                     );
 
+                    let mut filter: IBaseFilter;
                     let hr = m.BindToObject(None, None, &BF, &mut result__);
                     println!(
                         " --> IBaseFilter: {:?}  --  result__: {:?}",
