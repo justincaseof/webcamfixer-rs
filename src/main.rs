@@ -65,7 +65,6 @@ fn windows_1() {
                     
                     // ### PropertyBag ###########################################################################################################################################
                     let mut result__ = ::std::ptr::null_mut();
-                    let mut result__2 = ::std::ptr::null_mut();
                     let hr = m.BindToStorage(None, None, &P_BAG, &mut result__);
                     println!(" --> IPropertyBag as Storage: {:?}", hr);
                     let bag: IPropertyBag = IPropertyBag::from_raw(result__.as_mut().unwrap());
@@ -84,23 +83,24 @@ fn windows_1() {
                     println!("   - pvar: {:?}", prop_val);
                     let val = &(*prop_val).Anonymous.Anonymous;
                     println!("   - bstrVal: {:?}", val.Anonymous.bstrVal);
-                    // no idea if required...
-                    mem::forget(val);
-                    mem::forget(prop_val);
-                    mem::forget(property_name);
-                    mem::forget(pfilter);
+                    // // no idea if required...
+                    // mem::forget(val);
+                    // mem::forget(prop_val);
+                    // mem::forget(property_name);
+                    // mem::forget(pfilter);
 
                     // ###################################################################################################################################################
                     let hr = m.BindToObject(None, None, &BF, &mut result__);
                     println!(" --> IBaseFilter: {:?}  --  result__: {:?}", hr, result__);
                     
                     // ###################################################################################################################################################
-                    let hr = m.BindToObject(None, None, &IAMCC, &mut result__2);
-                    println!(" --> IAMCameraControl: {:?}  --  result__: {:?}", hr, result__2);
+                    let hr = m.BindToObject(None, None, &IAMCC, &mut result__);
+                    println!(" --> IAMCameraControl: {:?}  --  result__: {:?}", hr, result__);
                     if hr.is_ok() {
-                        let camctl: IAMCameraControl = IAMCameraControl::from_raw(result__2.as_mut().unwrap());
+                        let camctl: IAMCameraControl = IAMCameraControl::from_raw(result__.as_mut().unwrap());
                         println!("   - camctl: {:?}", camctl);
                         
+                        // ### READ PROPERTIES (currently not working: (Err(Error { code: HRESULT(0x80070057), message: "The parameter is incorrect." })))
                         let val: *mut i32 = mem::zeroed();
                         let flags: *mut i32 = mem::zeroed();
                         let mut the_prop = IAMCameraControl_PROP_ROLL;
@@ -110,8 +110,16 @@ fn windows_1() {
                             println!("   - camprop({}): val={:?}, flags={:?} ({:?})", the_prop, val, flags, res);
                         }
 
-                        // let res = camctl.Set(IAMCameraControl_FOCUS, IAMCameraControl_FOCUS_OFF, 0);
-                        // println!("   - camctl.set(0): {:?}", res);
+                        // ### WRITE PROPERTIES
+                        // ROLL
+                        let res = camctl.Set(IAMCameraControl_PROP_ROLL, 1, 0);  // WORKS!!!!!
+                        println!("   - camctl.set(): {:?}", res);
+                        // ZOOM
+                        let res = camctl.Set(IAMCameraControl_PROP_ZOOM, 200, 0);  // 100 .. 400 WORKS!!!!
+                        println!("   - camctl.set(): {:?}", res);
+                        // FOCUS
+                        let res = camctl.Set(IAMCameraControl_PROP_FOCUS, IAMCameraControl_FLAG_FOCUS_MANUAL, 0);
+                        println!("   - camctl.set(): {:?}", res);
                     }
                 }
                 1 => {
