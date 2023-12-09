@@ -1,7 +1,7 @@
 use std::ptr;
 
 use windows::{
-    core::{ComInterface, Interface, GUID, PWSTR},
+    core::{ComInterface, Interface, GUID, PWSTR, PCWSTR},
     Devices::Enumeration::{DeviceInformation, DeviceWatcher},
     Foundation::{Collections::IPropertySet, TypedEventHandler, IPropertyValue},
     Win32::{
@@ -23,7 +23,7 @@ use windows::{
             StructuredStorage::{IPropertyBag, IPropertyBag2, PROPBAG2},
             CLSCTX, CLSCTX_ACTIVATE_32_BIT_SERVER, CLSCTX_ALL, CLSCTX_APPCONTAINER,
             CLSCTX_LOCAL_SERVER, CLSCTX_SERVER, COINIT_MULTITHREADED,
-        }, Variant::{self, VARIANT, VT_BSTR, VARENUM}},
+        }, Variant::{self, VARIANT, VT_BSTR, VARENUM, VT_LPWSTR}},
     },
 };
 
@@ -163,23 +163,32 @@ fn windows_1() {
                     
                     let pv: IPropertyValue;
                     let mut buf = ::std::ptr::null_mut();
-                    let v: Vec<u16> = "foo".encode_utf16().collect();
+                    let v: Vec<u16> = "FriendlyName".encode_utf16().collect();
                     let pws: PWSTR = PWSTR::from_raw(buf);
-                    let mut pvar: VARIANT = std::mem::zeroed();
+                    
+                    // let foo: PCWSTR = std::mem::zeroed(); // ok, but invalid pointer
+                    let foo: PCWSTR = PCWSTR::from_raw(v.as_ptr());
+
+                    let mut pval: *mut IPropertyValue;
+                    let mut pvar: *mut VARIANT = ::std::ptr::null_mut();
+                    let mut pvar2: VARIANT = Default::default();
+                    let pvar3: *mut VARIANT = &mut pvar2;
+
                     // let a: PROPBAG2;
-                    let name: PROPBAG2 = PROPBAG2{
-                        dwType: VT_BSTR.0 as u32,
-                        vt: VARENUM::from(VT_BSTR),
+                    let name: PROPBAG2 = PROPBAG2 {
+                        dwType: VT_LPWSTR.0 as u32,
+                        vt: VARENUM::from(VT_LPWSTR),
                         cfType: 0,
                         dwHint: 0,
                         pstrName: pws,
                         clsid: CLSID_MediaPropertyBag,
                     };
-                    // let filter =  
-                    //     bag.Read(name, 
-                    //         pvar, 
-                    //         None
-                    //     );
+                    let read =  
+                        bag.Read(foo, 
+                            pvar3, 
+                            None
+                        );
+                    println!("   - read: {:?}", read);
 
                     let mut filter: IBaseFilter;
                     let hr = m.BindToObject(None, None, &BF, &mut result__);
