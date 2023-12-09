@@ -1,14 +1,14 @@
 use std::ptr;
 
 use windows::{
-    core::{ComInterface, Interface, GUID},
+    core::{ComInterface, Interface, GUID, PWSTR},
     Devices::Enumeration::{DeviceInformation, DeviceWatcher},
-    Foundation::{Collections::IPropertySet, TypedEventHandler},
+    Foundation::{Collections::IPropertySet, TypedEventHandler, IPropertyValue},
     Win32::{
         self,
         Media::{
             DirectShow::{
-                IAMCameraControl, IBaseFilter, ICameraControl, ICreateDevEnum, IFilterMapper2,
+                IAMCameraControl, IBaseFilter, ICameraControl, ICreateDevEnum, IFilterMapper2, BDA_STRING,
             },
             MediaFoundation::{
                 CLSID_AudioProperties, CLSID_CameraControlPropertyPage, CLSID_FilterGraph,
@@ -17,13 +17,13 @@ use windows::{
                 CLSID_VideoInputDeviceCategory, CLSID_VideoRenderer, GUID_NativeDeviceService,
             },
         },
-        System::Com::{
+        System::{Com::{
             CoCreateInstance, CoInitializeEx, CreateBindCtx, IEnumMoniker, IMoniker,
             MkParseDisplayName,
-            StructuredStorage::{IPropertyBag, IPropertyBag2},
+            StructuredStorage::{IPropertyBag, IPropertyBag2, PROPBAG2},
             CLSCTX, CLSCTX_ACTIVATE_32_BIT_SERVER, CLSCTX_ALL, CLSCTX_APPCONTAINER,
             CLSCTX_LOCAL_SERVER, CLSCTX_SERVER, COINIT_MULTITHREADED,
-        },
+        }, Variant::{self, VARIANT, VT_BSTR, VARENUM}},
     },
 };
 
@@ -158,9 +158,28 @@ fn windows_1() {
 
                     let hr = m.BindToStorage(None, None, &P_BAG, &mut result__);
                     println!(" --> IPropertyBag as Storage: {:?}", hr);
-                    let props = IPropertyBag::from_raw(result__.as_mut().unwrap());
-                    println!("   - ps: {:?}", props);
+                    let bag: IPropertyBag = IPropertyBag::from_raw(result__.as_mut().unwrap());
+                    println!("   - bag: {:?}", bag);
                     
+                    let pv: IPropertyValue;
+                    let mut buf = ::std::ptr::null_mut();
+                    let v: Vec<u16> = "foo".encode_utf16().collect();
+                    let pws: PWSTR = PWSTR::from_raw(buf);
+                    let mut pvar: VARIANT = std::mem::zeroed();
+                    // let a: PROPBAG2;
+                    let name: PROPBAG2 = PROPBAG2{
+                        dwType: VT_BSTR.0 as u32,
+                        vt: VARENUM::from(VT_BSTR),
+                        cfType: 0,
+                        dwHint: 0,
+                        pstrName: pws,
+                        clsid: CLSID_MediaPropertyBag,
+                    };
+                    // let filter =  
+                    //     bag.Read(name, 
+                    //         pvar, 
+                    //         None
+                    //     );
 
                     let mut filter: IBaseFilter;
                     let hr = m.BindToObject(None, None, &BF, &mut result__);
