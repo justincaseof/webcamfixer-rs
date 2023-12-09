@@ -1,7 +1,7 @@
 use std::ptr;
 
 use windows::{
-    core::{GUID, ComInterface, Interface},
+    core::{ComInterface, Interface, GUID},
     Devices::Enumeration::{DeviceInformation, DeviceWatcher},
     Foundation::{Collections::IPropertySet, TypedEventHandler},
     Win32::{
@@ -18,14 +18,11 @@ use windows::{
             },
         },
         System::Com::{
-            StructuredStorage::{
-                IPropertyBag,
-                IPropertyBag2,
-            },
             CoCreateInstance, CoInitializeEx, CreateBindCtx, IEnumMoniker, IMoniker,
-            MkParseDisplayName, CLSCTX,
-            CLSCTX_ACTIVATE_32_BIT_SERVER, CLSCTX_ALL, CLSCTX_APPCONTAINER, CLSCTX_LOCAL_SERVER,
-            CLSCTX_SERVER, COINIT_MULTITHREADED,
+            MkParseDisplayName,
+            StructuredStorage::{IPropertyBag, IPropertyBag2},
+            CLSCTX, CLSCTX_ACTIVATE_32_BIT_SERVER, CLSCTX_ALL, CLSCTX_APPCONTAINER,
+            CLSCTX_LOCAL_SERVER, CLSCTX_SERVER, COINIT_MULTITHREADED,
         },
     },
 };
@@ -73,7 +70,6 @@ fn windows_1() {
                     // ok
                     let current = monikers.get(0).expect("current");
                     println!("[{n}] found: {:?}", current);
-
 
                     let bindCtx = CreateBindCtx(0).expect("bindctx");
 
@@ -137,41 +133,42 @@ fn windows_1() {
                     //     " --> CLSID_MediaPropertyBag: {:?}  --  result__: {:?}",
                     //     hr, result__
                     // );
-                    
+
                     // let hr = m.BindToObject(None, None, &P_BAG, &mut result__);
                     // println!(
                     //     " --> IPropertyBag: {:?}  --  result__: {:?}",
                     //     hr, result__
                     // );
-                    
+
                     // let hr = m.BindToObject(None, None, &P_BAG2, &mut result__);
                     // println!(
                     //     " --> IPropertyBag2: {:?}  --  result__: {:?}",
                     //     hr, result__
                     // );
-                    
+
                     // let hr = m.BindToObject(None, None, &IAMCC, &mut result__);
                     // println!(
                     //     " --> IAMCC: {:?}  --  result__: {:?}",
                     //     hr, result__
                     // );
 
-                    // 
+                    // let mut props1: IPropertyBag = ::std::ptr::null_mut();
+                    // let mut props11: *mut *mut std::ffi::c_void = &mut props1.as_raw();
+                    // let mut props2: *mut IPropertyBag;
 
-                    let mut props: IPropertyBag;
                     let hr = m.BindToStorage(None, None, &P_BAG, &mut result__);
-                    println!(
-                        " --> IPropertyBag as Storage: {:?}  --  result__: {:?}",
-                        hr, result__
-                    );
+                    println!(" --> IPropertyBag as Storage: {:?}", hr);
+                    let props = IPropertyBag::from_raw(result__.as_mut().unwrap());
+                    println!("   - ps: {:?}", props);
+                    
 
                     let mut filter: IBaseFilter;
                     let hr = m.BindToObject(None, None, &BF, &mut result__);
-                    println!(
-                        " --> IBaseFilter: {:?}  --  result__: {:?}",
-                        hr, result__
-                    );
+                    println!(" --> IBaseFilter: {:?}  --  result__: {:?}", hr, result__);
 
+                    let mut iamcc: IAMCameraControl;
+                    let hr = m.BindToObject(None, None, &IAMCC, &mut result__);
+                    println!(" --> IAMCameraControl: {:?}  --  result__: {:?}", hr, result__);
                 }
                 1 => {
                     println!("end.");
