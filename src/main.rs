@@ -161,13 +161,9 @@ fn windows_1() {
                     let bag: IPropertyBag = IPropertyBag::from_raw(result__.as_mut().unwrap());
                     println!("   - bag: {:?}", bag);
                     
-                    let pv: IPropertyValue;
-                    let mut buf = ::std::ptr::null_mut();
                     let v: Vec<u16> = "FriendlyName".encode_utf16().collect();
-                    let pws: PWSTR = PWSTR::from_raw(buf);
-                    
-                    // let foo: PCWSTR = std::mem::zeroed(); // ok, but invalid pointer
-                    let foo: PCWSTR = PCWSTR::from_raw(v.as_ptr());
+                    let pws: PWSTR = PWSTR::from_raw(std::mem::zeroed());
+                    let property_name: PCWSTR = PCWSTR::from_raw(v.as_ptr());
 
                     let mut pval: *mut IPropertyValue;
                     let mut pvar: *mut VARIANT = ::std::ptr::null_mut();
@@ -184,7 +180,7 @@ fn windows_1() {
                         clsid: CLSID_MediaPropertyBag,
                     };
                     let read =  
-                        bag.Read(foo, 
+                        bag.Read(property_name, 
                             pvar3, 
                             None
                         );
