@@ -1,0 +1,23 @@
+[package]
+name = "webcamfixer-rs"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build]
+target = "x86_64-pc-windows-msvc"
+
+[dependencies]
+#winsafe = { version = "0.0.18", features = ["dshow"] }
+#winsafe = { git = "https://github.com/rodrigocfd/winsafe", features = ["dshow"] }
+
+[dependencies.windows]
+version = "0.52"
+features = [
+    "Win32_System_Com",
+    "Win32_Media_DirectShow",
+    "Win32_Media_MediaFoundation",
+    "Devices_Enumeration",
+    "Foundation_Collections",
+]
