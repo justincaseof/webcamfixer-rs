@@ -15,8 +15,11 @@ target = "x86_64-pc-windows-msvc"
 [dependencies.windows]
 version = "0.52"
 features = [
+    "Win32_Foundation",
     "Win32_System_Com",
     "Win32_System_Com_StructuredStorage",
+    "Win32_System_Ole",
+    # "Win32_System_Variant", # causes an error where "_g()" is not found"
     "Win32_Media_DirectShow",
     "Win32_Media_MediaFoundation",
     "Devices_Enumeration",
