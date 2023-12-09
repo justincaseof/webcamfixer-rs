@@ -1,14 +1,15 @@
 use std::ptr;
 
 use windows::{
-    core::{ComInterface, Interface, GUID, PWSTR, PCWSTR},
+    core::{ComInterface, Interface, GUID, PCWSTR, PWSTR},
     Devices::Enumeration::{DeviceInformation, DeviceWatcher},
-    Foundation::{Collections::IPropertySet, TypedEventHandler, IPropertyValue},
+    Foundation::{Collections::IPropertySet, IPropertyValue, TypedEventHandler},
     Win32::{
         self,
         Media::{
             DirectShow::{
-                IAMCameraControl, IBaseFilter, ICameraControl, ICreateDevEnum, IFilterMapper2, BDA_STRING,
+                IAMCameraControl, IBaseFilter, ICameraControl, ICreateDevEnum, IFilterMapper2,
+                BDA_STRING,
             },
             MediaFoundation::{
                 CLSID_AudioProperties, CLSID_CameraControlPropertyPage, CLSID_FilterGraph,
@@ -17,13 +18,16 @@ use windows::{
                 CLSID_VideoInputDeviceCategory, CLSID_VideoRenderer, GUID_NativeDeviceService,
             },
         },
-        System::{Com::{
-            CoCreateInstance, CoInitializeEx, CreateBindCtx, IEnumMoniker, IMoniker,
-            MkParseDisplayName,
-            StructuredStorage::{IPropertyBag, IPropertyBag2, PROPBAG2},
-            CLSCTX, CLSCTX_ACTIVATE_32_BIT_SERVER, CLSCTX_ALL, CLSCTX_APPCONTAINER,
-            CLSCTX_LOCAL_SERVER, CLSCTX_SERVER, COINIT_MULTITHREADED,
-        }, Variant::{self, VARIANT, VT_BSTR, VARENUM, VT_LPWSTR}},
+        System::{
+            Com::{
+                CoCreateInstance, CoInitializeEx, CreateBindCtx, IEnumMoniker, IMoniker,
+                MkParseDisplayName,
+                StructuredStorage::{IPropertyBag, IPropertyBag2, PROPBAG2},
+                CLSCTX, CLSCTX_ACTIVATE_32_BIT_SERVER, CLSCTX_ALL, CLSCTX_APPCONTAINER,
+                CLSCTX_LOCAL_SERVER, CLSCTX_SERVER, COINIT_MULTITHREADED,
+            },
+            Variant::{self, VARENUM, VARIANT, VT_BSTR, VT_LPWSTR},
+        },
     },
 };
 
@@ -160,25 +164,23 @@ fn windows_1() {
                     println!(" --> IPropertyBag as Storage: {:?}", hr);
                     let bag: IPropertyBag = IPropertyBag::from_raw(result__.as_mut().unwrap());
                     println!("   - bag: {:?}", bag);
-                    
-                    let filter: Vec<u16> = "Name".encode_utf16().collect();
-                    let property_name: PCWSTR = PCWSTR::from_raw(filter.as_ptr());
+
+                    // *const u16
+                    let mut filter: Vec<u16> = "FriendlyName".encode_utf16().collect();
+                    filter.push(0);  // EOF
+                    let pfilter: *const u16 = filter.as_ptr();
+                    let property_name: PCWSTR = PCWSTR::from_raw(pfilter);
 
                     let mut pval: *mut IPropertyValue;
                     // let mut pvar: *mut VARIANT = ::std::ptr::null_mut();  // "invalid pointer"
                     // let mut pvar: *mut VARIANT = ::std::mem::zeroed();  // "invalid pointer"
                     // let mut pvar2: VARIANT = Default::default();
                     // let pvar3: *mut VARIANT = &mut pvar2;
-                    let pvar: *mut VARIANT = &mut Default::default();  // The system cannot find the file specified.
+                    let prop_var: *mut VARIANT = &mut Default::default(); // The system cannot find the file specified.
 
-                    let read =  
-                        bag.Read(property_name, 
-                            pvar, 
-                            None
-                        );
+                    let read = bag.Read(property_name, prop_var, None);
                     println!("   - read: {:?}", read);
-                    println!("   - pvar: {:?}", pvar);
-
+                    println!("   - pvar: {:?}", prop_var);
 
                     let mut filter: IBaseFilter;
                     let hr = m.BindToObject(None, None, &BF, &mut result__);
@@ -186,7 +188,10 @@ fn windows_1() {
 
                     let mut iamcc: IAMCameraControl;
                     let hr = m.BindToObject(None, None, &IAMCC, &mut result__);
-                    println!(" --> IAMCameraControl: {:?}  --  result__: {:?}", hr, result__);
+                    println!(
+                        " --> IAMCameraControl: {:?}  --  result__: {:?}",
+                        hr, result__
+                    );
                 }
                 1 => {
                     println!("end.");
