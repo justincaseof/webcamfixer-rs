@@ -27,7 +27,7 @@ use windows::{
                 CLSCTX_LOCAL_SERVER, CLSCTX_SERVER, COINIT_MULTITHREADED,
             },
             Variant::{self, VARENUM, VARIANT, VT_BSTR, VT_LPWSTR},
-        },
+        }, Foundation::SysFreeString,
     },
 };
 
@@ -88,78 +88,6 @@ fn windows_1() {
                     let mut res: IAMCameraControl;
                     let mut result__ = ::std::ptr::null_mut();
 
-                    // let hr =
-                    //     m.BindToObject(None, None, &CLSID_CameraControlPropertyPage, &mut result__);
-                    // println!(
-                    //     " --> CLSID_CameraControlPropertyPage: {:?}  --  result__: {:?}",
-                    //     hr, result__
-                    // );
-
-                    // let hr = m.BindToObject(None, None, &CLSID_MediaPropertyBag, &mut result__);
-                    // println!(
-                    //     " --> CLSID_MediaPropertyBag: {:?}  --  result__: {:?}",
-                    //     hr, result__
-                    // );
-
-                    // let hr = m.BindToObject(None, None, &CLSID_FilterGraph, &mut result__);
-                    // println!(
-                    //     " --> CLSID_FilterGraph: {:?}  --  result__: {:?}",
-                    //     hr, result__
-                    // );
-
-                    // let hr = m.BindToObject(None, None, &CLSID_FilterGraphNoThread, &mut result__);
-                    // println!(
-                    //     " --> CLSID_FilterGraphNoThread: {:?}  --  result__: {:?}",
-                    //     hr, result__
-                    // );
-
-                    // let hr =
-                    //     m.BindToObject(None, None, &CLSID_FilterGraphPrivateThread, &mut result__);
-                    // println!(
-                    //     " --> CLSID_FilterGraphPrivateThread: {:?}  --  result__: {:?}",
-                    //     hr, result__
-                    // );
-
-                    // let hr = m.BindToObject(None, None, &CLSID_FilterMapper, &mut result__);
-                    // println!(
-                    //     " --> CLSID_FilterMapper: {:?}  --  result__: {:?}",
-                    //     hr, result__
-                    // );
-
-                    // let hr = m.BindToObject(None, None, &CLSID_FilterMapper2, &mut result__);
-                    // println!(
-                    //     " --> CLSID_FilterMapper2: {:?}  --  result__: {:?}",
-                    //     hr, result__
-                    // );
-
-                    // let hr = m.BindToObject(None, None, &CLSID_MediaPropertyBag, &mut result__);
-                    // println!(
-                    //     " --> CLSID_MediaPropertyBag: {:?}  --  result__: {:?}",
-                    //     hr, result__
-                    // );
-
-                    // let hr = m.BindToObject(None, None, &P_BAG, &mut result__);
-                    // println!(
-                    //     " --> IPropertyBag: {:?}  --  result__: {:?}",
-                    //     hr, result__
-                    // );
-
-                    // let hr = m.BindToObject(None, None, &P_BAG2, &mut result__);
-                    // println!(
-                    //     " --> IPropertyBag2: {:?}  --  result__: {:?}",
-                    //     hr, result__
-                    // );
-
-                    // let hr = m.BindToObject(None, None, &IAMCC, &mut result__);
-                    // println!(
-                    //     " --> IAMCC: {:?}  --  result__: {:?}",
-                    //     hr, result__
-                    // );
-
-                    // let mut props1: IPropertyBag = ::std::ptr::null_mut();
-                    // let mut props11: *mut *mut std::ffi::c_void = &mut props1.as_raw();
-                    // let mut props2: *mut IPropertyBag;
-
                     let hr = m.BindToStorage(None, None, &P_BAG, &mut result__);
                     println!(" --> IPropertyBag as Storage: {:?}", hr);
                     let bag: IPropertyBag = IPropertyBag::from_raw(result__.as_mut().unwrap());
@@ -171,16 +99,13 @@ fn windows_1() {
                     let pfilter: *const u16 = filter.as_ptr();
                     let property_name: PCWSTR = PCWSTR::from_raw(pfilter);
 
-                    let mut pval: *mut IPropertyValue;
-                    // let mut pvar: *mut VARIANT = ::std::ptr::null_mut();  // "invalid pointer"
-                    // let mut pvar: *mut VARIANT = ::std::mem::zeroed();  // "invalid pointer"
-                    // let mut pvar2: VARIANT = Default::default();
-                    // let pvar3: *mut VARIANT = &mut pvar2;
-                    let prop_var: *mut VARIANT = &mut Default::default(); // The system cannot find the file specified.
+                    let prop_val: *mut VARIANT = &mut Default::default(); // The system cannot find the file specified.
 
-                    let read = bag.Read(property_name, prop_var, None);
+                    let read = bag.Read(property_name, prop_val, None);
                     println!("   - read: {:?}", read);
-                    println!("   - pvar: {:?}", prop_var);
+                    println!("   - pvar: {:?}", prop_val);
+                    let val = &(*prop_val).Anonymous.Anonymous;
+                    println!("   - bstrVal: {:?}", val.Anonymous.bstrVal);
 
                     let mut filter: IBaseFilter;
                     let hr = m.BindToObject(None, None, &BF, &mut result__);
