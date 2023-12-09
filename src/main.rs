@@ -88,6 +88,10 @@ fn windows_1() {
                     // mem::forget(prop_val);
                     // mem::forget(property_name);
                     // mem::forget(pfilter);
+                    // mem::drop(val);
+                    // mem::drop(prop_val);
+                    // mem::drop(property_name);
+                    // mem::drop(pfilter);
 
                     // ###################################################################################################################################################
                     let hr = m.BindToObject(None, None, &BF, &mut result__);
@@ -104,22 +108,27 @@ fn windows_1() {
                         let val: *mut i32 = mem::zeroed();
                         let flags: *mut i32 = mem::zeroed();
                         let mut the_prop = IAMCameraControl_PROP_ROLL;
-                        for m in 0..10 {
+                        
+                        let _val: i32 = 0;
+                        let _flags: i32;
+                        let __val = _val;
+
+                        for m in 0..6 {
                             the_prop = m;
                             let res = camctl.Get(the_prop, val, flags);
-                            println!("   - camprop({}): val={:?}, flags={:?} ({:?})", the_prop, val, flags, res);
+                            println!("     - camctl.get({}): val={:?}, flags={:?} ({:?})", the_prop, val, flags, res);
                         }
 
                         // ### WRITE PROPERTIES
                         // ROLL
                         let res = camctl.Set(IAMCameraControl_PROP_ROLL, 1, 0);  // WORKS!!!!!
-                        println!("   - camctl.set(): {:?}", res);
+                        println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", the_prop, val, flags, res);
                         // ZOOM
                         let res = camctl.Set(IAMCameraControl_PROP_ZOOM, 200, 0);  // 100 .. 400 WORKS!!!!
-                        println!("   - camctl.set(): {:?}", res);
+                        println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", the_prop, val, flags, res);
                         // FOCUS
                         let res = camctl.Set(IAMCameraControl_PROP_FOCUS, IAMCameraControl_FLAG_FOCUS_MANUAL, 0);
-                        println!("   - camctl.set(): {:?}", res);
+                        println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", the_prop, val, flags, res);
                     }
                 }
                 1 => {
