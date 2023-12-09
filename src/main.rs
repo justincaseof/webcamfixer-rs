@@ -11,11 +11,11 @@ fn windows_1() {
 
         let enum_dev: ICreateDevEnum =
             CoCreateInstance(&CLSID_SystemDeviceEnum, None, CLSCTX_ALL).expect("devEnum");
-        println!("enum_dev: \n\t{:?}", enum_dev);
+        println!("enum_dev: {:?}", enum_dev);
 
         let mut class_enumerator: Option<IEnumMoniker> = None;
         enum_dev.CreateClassEnumerator(&CLSID_VideoInputDeviceCategory, &mut class_enumerator, 0).expect("CreateClassEnumerator");
-        println!("class_enumerator: \n\t{:?}", class_enumerator);
+        println!("class_enumerator: {:?}", class_enumerator);
 
         if class_enumerator.is_none() {
             println!("no devices in category");
@@ -25,22 +25,28 @@ fn windows_1() {
         
         // FIXME: reset?
         // let rreset = enum_moniker.Reset();
-        // println!("rreset: \n\t{:?}", rreset);
+        // println!("rreset: \{:?}", rreset);
         let mut monikers: Vec<Option<IMoniker>> = Vec::new();
         monikers.push(None);
 
-        let mut lala: Option<*mut u32> = None;
-        for n in 1..10 {
-            let hr = enum_moniker.Next(&mut monikers, lala);
-            println!("hr: \n\t{:?}", hr);
-            println!("lala: \n\t{:?}", lala);
+        let mut celt: Option<*mut u32> = None;
+        for n in 0..10 {
+            let hr = enum_moniker.Next(&mut monikers, celt);
             
-            let zero = monikers.get(0);
-            println!("[0]: \n\t{:?}", zero);
-
-            if lala.is_some() || zero.is_none() {
-                println!("no results!");
-                break;
+            match hr.0 {
+                0 => {
+                    // ok
+                    let current = monikers.get(0).expect("current");
+                    println!("[{n}] found: {:?}", current);
+                },
+                1 => {
+                    println!("end.");
+                    return;
+                },
+                _ => {
+                    println!("error: {hr}");
+                    return;
+                }
             }
         }
     }
