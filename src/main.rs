@@ -161,30 +161,24 @@ fn windows_1() {
                     let bag: IPropertyBag = IPropertyBag::from_raw(result__.as_mut().unwrap());
                     println!("   - bag: {:?}", bag);
                     
-                    let v: Vec<u16> = "FriendlyName".encode_utf16().collect();
-                    let pws: PWSTR = PWSTR::from_raw(std::mem::zeroed());
-                    let property_name: PCWSTR = PCWSTR::from_raw(v.as_ptr());
+                    let filter: Vec<u16> = "Name".encode_utf16().collect();
+                    let property_name: PCWSTR = PCWSTR::from_raw(filter.as_ptr());
 
                     let mut pval: *mut IPropertyValue;
-                    let mut pvar: *mut VARIANT = ::std::ptr::null_mut();
-                    let mut pvar2: VARIANT = Default::default();
-                    let pvar3: *mut VARIANT = &mut pvar2;
+                    // let mut pvar: *mut VARIANT = ::std::ptr::null_mut();  // "invalid pointer"
+                    // let mut pvar: *mut VARIANT = ::std::mem::zeroed();  // "invalid pointer"
+                    // let mut pvar2: VARIANT = Default::default();
+                    // let pvar3: *mut VARIANT = &mut pvar2;
+                    let pvar: *mut VARIANT = &mut Default::default();  // The system cannot find the file specified.
 
-                    // let a: PROPBAG2;
-                    let name: PROPBAG2 = PROPBAG2 {
-                        dwType: VT_LPWSTR.0 as u32,
-                        vt: VARENUM::from(VT_LPWSTR),
-                        cfType: 0,
-                        dwHint: 0,
-                        pstrName: pws,
-                        clsid: CLSID_MediaPropertyBag,
-                    };
                     let read =  
                         bag.Read(property_name, 
-                            pvar3, 
+                            pvar, 
                             None
                         );
                     println!("   - read: {:?}", read);
+                    println!("   - pvar: {:?}", pvar);
+
 
                     let mut filter: IBaseFilter;
                     let hr = m.BindToObject(None, None, &BF, &mut result__);
