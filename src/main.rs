@@ -29,10 +29,15 @@ fn windows_1() {
     unsafe {
         CoInitializeEx(None, COINIT_MULTITHREADED).expect("initialization");
 
+        
+        // Get ICreateDevEnum instance
+        // 
         let enum_dev: ICreateDevEnum =
             CoCreateInstance(&CLSID_SystemDeviceEnum, None, CLSCTX_ALL).expect("devEnum"); // works
         println!("enum_dev: {:?}", enum_dev);
 
+        // Query for VideoInputDevices
+        // 
         let mut class_enumerator: Option<IEnumMoniker> = None;
         enum_dev
             .CreateClassEnumerator(&CLSID_VideoInputDeviceCategory, &mut class_enumerator, 0)
@@ -48,6 +53,10 @@ fn windows_1() {
         let mut monikers: Vec<Option<IMoniker>> = Vec::new();
         monikers.push(None);
 
+        
+        // walk through results, but maximum 10 items...
+        // ...and print out their stuff
+        // 
         let celt: Option<*mut u32> = None;
         for n in 0..10 {
             let hr = enum_moniker.Next(&mut monikers, celt);
@@ -70,7 +79,7 @@ fn windows_1() {
                     let bag: IPropertyBag = IPropertyBag::from_raw(result__.as_mut().unwrap());
                     println!("   - bag: {:?}", bag);
 
-                    // ### PropertyBag->VARIANT ##################################################################################################################################
+                    // ######### PropertyBag->VARIANT ##################################################################################################################################
                     let mut filter: Vec<u16> = "FriendlyName".encode_utf16().collect();
                     filter.push(0); // EOF
                     let pfilter: *const u16 = filter.as_ptr();
@@ -93,7 +102,7 @@ fn windows_1() {
                     // mem::drop(property_name);
                     // mem::drop(pfilter);
 
-                    // ###################################################################################################################################################
+                    // ### IBaseFilter ##########################################################################################################################################
                     let hr = m.BindToObject(None, None, &BF, &mut result__);
                     println!(" --> IBaseFilter: {:?}  --  result__: {:?}", hr, result__);
                     
@@ -181,6 +190,7 @@ fn windows_1() {
     }
 }
 
+// these consts could be found in crate 'windows' as well. however, it was kinda hard to find them all in the first place, so i leave them here.
 #[allow(dead_code, non_upper_case_globals)]
 mod consts {
     pub mod camctl {
